@@ -330,6 +330,48 @@ kubectl -n emojivoto port-forward svc/web-svc 8080:80
 ```
 
 
+Now visit http://localhost:8080. Voila! You should see Emojivoto in all its glory.
+
+If you click around Emojivoto, you might notice that it’s a little broken! For example, if you try to vote for the donut emoji, you’ll get a 404 page. Don’t worry, these errors are intentional. (In a later guide, we’ll show you how to use Linkerd to identify the problem.)
+
+With Emoji installed and running, we’re ready to mesh it—that is, to add Linkerd’s data plane proxies to it. We can do this on a live application without downtime, thanks to Kubernetes’s rolling deploys. Mesh your Emojivoto application by running:
+
+
+
+```
+kubectl get -n emojivoto deploy -o yaml \
+  | linkerd inject - \
+  | kubectl apply -f -
+```
+
+This command retrieves all of the deployments running in the emojivoto namespace, runs their manifests through linkerd inject, and then reapplies it to the cluster. (The linkerd inject command simply adds annotations to the pod spec that instruct Linkerd to inject the proxy into the pods when they are created.)
+
+As with install, inject is a pure text operation, meaning that you can inspect the input and output before you use it. Once piped into kubectl apply, Kubernetes will execute a rolling deploy and update each pod with the data plane’s proxies.
+
+Congratulations! You’ve now added Linkerd to an application! Just as with the control plane, it’s possible to verify that everything is working the way it should on the data plane side. Check your data plane with:
+
+```
+linkerd -n emojivoto check --proxy
+```
+
+
+Now, see that you have 2 pods: 
+```
+% kubectl get pods
+NAME                       READY   STATUS    RESTARTS   AGE
+emoji-9f6758b4d-6x99z      2/2     Running   0          87s
+vote-bot-db7d9c4d9-drjqs   2/2     Running   0          87s
+voting-5d66f899b7-bx4bs    2/2     Running   0          86s
+web-8559b97f7c-98qgg       2/2     Running   0          86s
+```
+
+And, of course, you can visit http://localhost:8080 and once again see Emojivoto in all its meshed glory.
+
+
+
+Why do we really need multi-cluster? 
+Some customers may want an APP 1 not want to live together APP 2. 
+Basically in this case, you would want the external service in a separate cluster to be like locally located. 
 
 
 
