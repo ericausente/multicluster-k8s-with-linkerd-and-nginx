@@ -247,6 +247,91 @@ linkerd-control-plane-proxy
 Status check results are √
 ```
 
+Let's install the dashboard. 
+
+
+To install the viz extension, run:
+```
+linkerd viz install | kubectl apply -f - 
+# install the on-cluster metrics stack
+```
+Once you’ve installed the extension, let’s validate everything one last time:
+```
+linkerd check
+
+...
+linkerd-viz
+-----------
+√ linkerd-viz Namespace exists
+√ can initialize the client
+√ linkerd-viz ClusterRoles exist
+√ linkerd-viz ClusterRoleBindings exist
+√ tap API server has valid cert
+√ tap API server cert is valid for at least 60 days
+√ tap API service is running
+√ linkerd-viz pods are injected
+√ viz extension pods are running
+√ viz extension proxies are healthy
+√ viz extension proxies are up-to-date
+√ viz extension proxies and cli versions match
+√ prometheus is installed and configured correctly
+√ viz extension self-check
+```
+
+With the control plane and extensions installed and running, we’re now ready to explore Linkerd! Access the dashboard with:
+```
+linkerd viz dashboard &
+
+ % linkerd viz dashboard &
+Linkerd dashboard available at:
+http://localhost:50750
+Grafana dashboard available at:
+http://localhost:50750/grafana
+Opening Linkerd dashboard in the default browser
+
+```
+
+From the dashbaord: 
+Mesh of proxies - dataplane
+We need an interface point of those proxies - this is the control plane
+
+Certificate Management, Dashboard and so on... 
+
+
+
+Now let's install the demo app
+
+Congratulations, Linkerd is installed! However, it’s not doing anything just yet. To see Linkerd in action, we’re going to need an application.
+
+Let’s install a demo application called Emojivoto. Emojivoto is a simple standalone Kubernetes application that uses a mix of gRPC and HTTP calls to allow the user to vote on their favorite emojis.
+
+Install Emojivoto into the emojivoto namespace by running:
+```
+curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/emojivoto.yml \
+  | kubectl apply -f -
+```  
+
+To change from the default namespace to one named ‘emojivoto’ you would enter:
+```
+% kubectl config set-context --current --namespace="emojivoto"
+
+% kubectl get pods
+NAME                        READY   STATUS    RESTARTS   AGE
+emoji-68cdd48fc7-jdjd7      1/1     Running   0          3m12s
+vote-bot-85c88b944d-49ghb   1/1     Running   0          3m12s
+voting-5b7f854444-bkt4z     1/1     Running   0          3m12s
+web-679ccff67b-9wrqk        1/1     Running   0          3m11s
+```
+
+
+Before we mesh it, let’s take a look at Emojivoto in its natural state. We’ll do this by forwarding traffic to its web-svc service so that we can point our browser to it. Forward web-svc locally to port 8080 by running:
+```
+kubectl -n emojivoto port-forward svc/web-svc 8080:80
+```
+
+
+
+
 
 Goal / Pending to do: 
 
