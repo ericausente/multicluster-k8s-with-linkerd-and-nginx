@@ -368,6 +368,17 @@ web-8559b97f7c-98qgg       2/2     Running   0          86s
 And, of course, you can visit http://localhost:8080 and once again see Emojivoto in all its meshed glory.
 
 
+===
+Now prepare your 2 clusters: 
+WEST is in EKS
+EAST is in AKS
+
+e.ausente@C02DR4L1MD6M ~ % alias west="kubectl config use-context E.AUSENTE@f5.com@k8s-cluster-west.ap-southeast-1.eksctl.io"
+e.ausente@C02DR4L1MD6M ~ % alias east="kubectl config use-context k8s-cluster-east"                                         
+
+Now you can just use either "west" or "east" command. 
+===
+
 
 Why do we really need multi-cluster? 
 Some customers may want an APP 1 not want to live together APP 2. 
