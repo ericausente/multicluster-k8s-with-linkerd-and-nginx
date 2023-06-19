@@ -89,25 +89,57 @@ my-release-nginx-ingress-controller-698b6794f8-qtzf5   2/2     Running   0      
 ```
 
 With NGINX Ingress controller successfully deployed with the `Linkerd` sidecar proxy, we can now install our test application.
-For this example, we are going to use the `httpbin` image.
+For this example, we are going to use the `kopi-teh` image.
+
 
 ```
-curl -OsL https://raw.githubusercontent.com/openservicemesh/osm-docs/release-v1.2/manifests/samples/httpbin/httpbin.yaml
+kubectl create deploy kopi-teh --image=tsanghan/kopi-teh:v1 --replicas=2 --port 8000
+kubectl expose deployment kopi-teh --port=80 --target-port=8000
+kubectl get svc -o wide
 ```
 
-Apply the test application:
+```
+% cat  vs-test.yaml
+apiVersion: k8s.nginx.org/v1
+kind: VirtualServer
+metadata:
+  name: kopi-teh-vs
+spec:
+  host: a025c1fdb9d4343efb76f1b1148d2d0d-1949745773.ap-southeast-1.elb.amazonaws.com
+  upstreams:
+  - name: kopi-teh
+    service: kopi-teh
+    port: 80
+  routes:
+  - path: /
+    action:
+      pass: kopi-teh
+ ```
+ 
+ ```
+$ kubectl apply -f vs-test.yaml
 
-```bash
-kubectl apply -f httpbin.yaml
+$ kubectl get vs
+NAME          STATE   HOST                                                                           IP    PORTS      AGE
+kopi-teh-vs   Valid   a025c1fdb9d4343efb76f1b1148d2d0d-1949745773.ap-southeast-1.elb.amazonaws.com         [80,443]   108s
+  ```
+  
+#Scenario 1: no linkerd injection of my app pods yet (while IC is injected) 
+Results:
+```
+  $ curl http://a025c1fdb9d4343efb76f1b1148d2d0d-1949745773.ap-southeast-1.elb.amazonaws.com/
+{"AppName":"kopi-teh:v1","Hostname":"kopi-teh-7fd4cdb7fc-f8jqz","Choose":["/kopi","/teh"],"Or Try":["/milo"],"No drinks?":["/info"]}
 ```
 
-To inject an exisiting deployment:
+
+# Scenario 2: linkerd injection of my app pods
 ```
-$ kubectl get deployment httpbin -oyaml | linkerd inject - | kubectl apply -f -
+$ kubectl get deployment kopi-teh -oyaml | linkerd inject - | kubectl apply -f -
 
-deployment "httpbin" injected
+deployment "kopi-teh" injected
 
-deployment.apps/httpbin configured
+Warning: resource deployments/kopi-teh is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by kubectl apply. kubectl apply should only be used on resources created declaratively by either kubectl create --save-config or kubectl apply. The missing annotation will be patched automatically.
+deployment.apps/kopi-teh configured
 ```
 
 You can confirm that the application has been successfully injected with the `linkerd` sidecar:
@@ -115,10 +147,10 @@ You can confirm that the application has been successfully injected with the `li
 ```bash
 $ kubectl get pods
 NAME                                                   READY   STATUS    RESTARTS   AGE
-httpbin-595f48449f-9f9n9                               2/2     Running   0          23s
-my-release-nginx-ingress-controller-698b6794f8-qtzf5   2/2     Running   0          3m43s
+kopi-teh-8487656dc4-wmfjr                              2/2     Running   0          30s
+kopi-teh-8487656dc4-xntgw                              2/2     Running   0          25s
+my-release-nginx-ingress-controller-698b6794f8-qtzf5   2/2     Running   0          21m
 ```
-
 
 We can now start sending traffic to NGINX Ingress controller, to verify that `Linkerd` is doing the sidecar traffic connections.
 
