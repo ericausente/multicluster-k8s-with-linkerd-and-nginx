@@ -33,6 +33,22 @@ In the above example, my `NGINX Ingress controller` deployment is in the `nginx-
 
 If you are using `Helm`, you can inject the sidecar in two ways.
 
+```
+ helm install my-release oci://ghcr.io/nginxinc/charts/nginx-ingress --version 0.17.1
+WARNING: Kubernetes configuration file is group-readable. This is insecure. Location: /home/ericausente/.kube/config
+WARNING: Kubernetes configuration file is world-readable. This is insecure. Location: /home/ericausente/.kube/config
+Pulled: ghcr.io/nginxinc/charts/nginx-ingress:0.17.1
+Digest: sha256:876eb9dc0022d4517f36909822454b2422c49c32ca72d615ba0b2ac6947e7977
+NAME: my-release
+LAST DEPLOYED: Tue Jun 20 01:00:28 2023
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+The NGINX Ingress Controller has been installed.
+```
+
 1. You can annotation your `Helm` depoloyment with the following annotation:
 
 ```yaml
@@ -43,6 +59,7 @@ controller:
 ```
 
 This annotation will tell `Linkerd` to automatically inject the sidecar during the install of NGINX Ingress controller using `helm`.
+
 
 
 2. Inject the linkerd sidecar to an exisiting `helm` install
