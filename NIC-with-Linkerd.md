@@ -73,23 +73,26 @@ kubectl get deployment -n nginx-ingress <name_of_helm_release> -oyaml | linkerd 
 For example, in my lab I ran the following to inject my `helm` release named `kic01-nginx-ingress-controller` in the `nginx-ingress` namespace:
 
 ```bash
- kubectl get deploy -n nginx-ingress kic01-nginx-ingress-controller -oyaml | linkerd inject - | kubectl apply -f -
- ```
+$ kubectl get deployment my-release-nginx-ingress-controller -oyaml | linkerd inject - | kubectl apply -f -
+
+deployment "my-release-nginx-ingress-controller" injected
+
+Warning: resource deployments/my-release-nginx-ingress-controller is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by kubectl apply. kubectl apply should only be used on resources created declaratively by either kubectl create --save-config or kubectl apply. The missing annotation will be patched automatically.
+deployment.apps/my-release-nginx-ingress-controller configured ```
 
 If we do a `kubectl get pods -n nginx-ingress` on the NGINX Ingress controller, we can see we now have `2/2` pods ready. That confirms that the `Linkerd` sidecar has been successfully injected into NGINX Ingress controller.
 
 ```bash
-kubectl get po -n nginx-ingress kic01-nginx-ingress-controller-5f8c9b586d-ng4r8
-NAME                                              READY   STATUS    RESTARTS   AGE
-kic01-nginx-ingress-controller-5f8c9b586d-ng4r8   2/2     Running   0          30m
+$ kubectl get pods
+NAME                                                   READY   STATUS    RESTARTS   AGE
+my-release-nginx-ingress-controller-698b6794f8-qtzf5   2/2     Running   0          45s
 ```
 
 With NGINX Ingress controller successfully deployed with the `Linkerd` sidecar proxy, we can now install our test application.
 For this example, we are going to use the `httpbin` image.
 
 ```
-kubectl create ns httpbin
-curl -sL https://raw.githubusercontent.com/openservicemesh/osm-docs/release-v1.2/manifests/samples/httpbin/httpbin.yaml
+curl -OsL https://raw.githubusercontent.com/openservicemesh/osm-docs/release-v1.2/manifests/samples/httpbin/httpbin.yaml
 ```
 
 Apply the test application:
@@ -100,15 +103,20 @@ kubectl apply -f httpbin.yaml
 
 To inject an exisiting deployment:
 ```
-kubectl get deployment -n httpbin httpbin -oyaml | linkerd inject - | kubectl apply -f -
+$ kubectl get deployment httpbin -oyaml | linkerd inject - | kubectl apply -f -
+
+deployment "httpbin" injected
+
+deployment.apps/httpbin configured
 ```
 
-You can confirm that the application has been successfully ijected with the `linkerd` sidecar:
+You can confirm that the application has been successfully injected with the `linkerd` sidecar:
 
 ```bash
-kubectl get po -n httpbin
-NAME                       READY   STATUS    RESTARTS   AGE
-httpbin-66df5bfbc9-ffhdp   2/2     Running   0          67s
+$ kubectl get pods
+NAME                                                   READY   STATUS    RESTARTS   AGE
+httpbin-595f48449f-9f9n9                               2/2     Running   0          23s
+my-release-nginx-ingress-controller-698b6794f8-qtzf5   2/2     Running   0          3m43s
 ```
 
 
